@@ -77,7 +77,7 @@ class InstagramBot:
             time.sleep(2)
 
     def comment(self):
-        comments = ['Keep up the good work! 👏💪', 'I love this']
+        comments = ['Keep up the good work! 👏💪', 'I love this', '😍😍😍' 'yesssss this is what I like to see👏😍']
         
         comment_field = lambda: self.driver.find_element_by_tag_name('textarea')
         comment_field().click()
@@ -86,7 +86,7 @@ class InstagramBot:
         comment = random.choice(comments)
         for letter in comment:
             comment_field().send_keys(letter)
-            time.sleep(0.2)
+            time.sleep(random.randint(1,9)/10)
 
         comment_field().send_keys(Keys.RETURN)
 
@@ -96,24 +96,27 @@ class InstagramBot:
 
         for link in pic_hrefs:
             self.driver.get(link)
-            time.sleep(2)
+            time.sleep(random.randint(1, 3))
 
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(random.randint(2, 4))
 
             self.comment()
-            time.sleep(2)
+            time.sleep(random.randint(2, 4))
 
             self.like_photo()
-            
+            time.sleep(random.randint(2, 4))
+
+            self.see_who_liked_and_like(link)
+
             unique_photos -= 1
             sleep_time = random.randint(18, 28)
-            print('# unique photos left: ' + str(unique_photos) + "sleeping for " + str(sleep_time))
+            print('# of unique photos left: ' + str(unique_photos) + ' sleeping for ' + str(sleep_time))
             time.sleep(sleep_time)
 
         self.closeBrowser()
 
-    def see_who_liked(self, link):
+    def see_who_liked_and_like(self, link):
         users_link = []
         self.driver.get(link)
         time.sleep(2)
@@ -130,11 +133,12 @@ class InstagramBot:
         # building list of unique photos
         [users_link.append(href) for href in links if href not in users_link]
 
+        # now go through the valid user profile links and like their first pic
         for link in users_link:
             self.driver.get(link)
             time.sleep(2)
 
-            # get all the tags
+            # get all the link tags on the page
             hrefs_in_view = self.driver.find_elements_by_tag_name('a')
             # finding relevant hrefs
             posts_in_view = [elem.get_attribute('href') for elem in hrefs_in_view if '.com/p/' in elem.get_attribute('href')]
@@ -142,9 +146,9 @@ class InstagramBot:
             if len(posts_in_view) > 0:
                 first_post = posts_in_view[0]
                 self.driver.get(first_post)
-                time.sleep(2)
+                time.sleep(random.randint(1, 3))
                 self.like_photo()
-                time.sleep(2)
+                time.sleep(random.randint(2, 4))
 
 
 if __name__ == "__main__":
@@ -157,10 +161,10 @@ if __name__ == "__main__":
     ig = InstagramBot(username, pw)
     ig.login()
 
-    # hashtags_in_niche = [
-    #     'iosdeveloper'
-    # ]
+    hashtags_in_niche = [
+        'ootd', 'outfit', 'womenintech', 'iosdeveloper', 'swiftlanguage'
+    ]
 
-    # ig.execute(hashtags_in_niche)
+    ig.execute(hashtags_in_niche)
 
-    ig.see_who_liked('https://www.instagram.com/p/B3vVZxfJMyv/')
+    # ig.see_who_liked_and_like('https://www.instagram.com/p/B3vVZxfJMyv/')
