@@ -42,28 +42,35 @@ class InstagramBot:
         password_elem.send_keys(Keys.RETURN)
         time.sleep(2)
     
-    def like_photo(self, hashtag):
+    def get_valid_photo_links(self, hashtags):
         driver = self.driver 
-        driver.get('https://www.instagram.com/explore/tags/' + hashtag + '/')
-        time.sleep(2)
-        
-        # get pic links to like
         pic_hrefs = []
-        # bot scrolls down to web page to get new pictures
-        for i in range(1, 5):
-            try: 
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(2)
 
-                # get all the tags
-                hrefs_in_view = driver.find_elements_by_tag_name('a')
-                # finding relevant hrefs
-                hrefs_in_view = [elem.get_attribute('href') for elem in hrefs_in_view if '.com/p/' in elem.get_attribute('href')]
-                # building list of unique photos
-                [pic_hrefs.append(href) for href in hrefs_in_view if href not in pic_hrefs]
-                print(hashtag + ' photos: ' + str(len(pic_hrefs)))
-            except Exception:
-                continue
+        for hashtag in hashtags:
+            driver.get('https://www.instagram.com/explore/tags/' + hashtag + '/')
+            time.sleep(2)
+            
+            # bot scrolls down to web page to get new pictures
+            for i in range(1, 2):
+                try: 
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    time.sleep(2)
+
+                    # get all the tags
+                    hrefs_in_view = driver.find_elements_by_tag_name('a')
+                    # finding relevant hrefs
+                    pics_in_view = [elem.get_attribute('href') for elem in hrefs_in_view if '.com/p/' in elem.get_attribute('href')]
+                    # building list of unique photos
+                    [pic_hrefs.append(href) for href in pics_in_view if href not in pic_hrefs]
+                    print(hashtag + ' photos: ' + str(len(pic_hrefs)))
+                except Exception:
+                    continue
+
+        return pic_hrefs
+
+    def like_photo(self, hashtags):
+        driver = self.driver
+        pic_hrefs = self.get_valid_photo_links(hashtags)
 
         # like pics
         unique_photos = len(pic_hrefs)
@@ -75,13 +82,33 @@ class InstagramBot:
                 time.sleep(random.randint(2, 4))
                 like_button = lambda: driver.find_element_by_xpath('//span[@aria-label="Like"]').click()
                 like_button().click()
-                for second in reversed(range(0, random.randint(18, 28))):
-                    print("#" + hashtag + ': unique photos left: ' + str(unique_photos)
-                                    + " | Sleeping " + str(second))
+                print('Liked!')
+                for second in range(0, random.randint(2, 3)):
+                    print('# unique photos left: ' + str(unique_photos) + " | Sleeping " + str(second))
                     time.sleep(1)
             except Exception as e:
                 time.sleep(2)
             unique_photos -= 1
+
+    def comment(self, hashtags):
+        pic_hrefs = self.get_valid_photo_links(hashtags)
+        comments = ['Keep up the good work! 👏💪', 'I love this']
+        for pic in pic_hrefs:
+            self.driver.get(pic)
+            time.sleep(2)
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            
+            comment_field = lambda: self.driver.find_element_by_tag_name('textarea')
+            comment_field().click()
+            comment_field().clear()
+
+            comment = random.choice(comments)
+            for letter in comment:
+                comment_field().send_keys(letter)
+                time.sleep(0.2)
+
+            comment_field().send_keys(Keys.RETURN)
+
 
 if __name__ == "__main__":
 
@@ -92,4 +119,10 @@ if __name__ == "__main__":
 
     ig = InstagramBot(username, pw)
     ig.login()
-    ig.like_photo('newyork')
+
+    hashtags_in_niche = [
+        'coding','programming','computerscience'
+    ]
+
+    # ig.like_photo(hashtags_in_niche)
+    ig.comment(hashtags_in_niche)
