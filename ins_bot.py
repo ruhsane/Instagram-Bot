@@ -113,6 +113,39 @@ class InstagramBot:
 
         self.closeBrowser()
 
+    def see_who_liked(self, link):
+        users_link = []
+        self.driver.get(link)
+        time.sleep(2)
+
+        # click to view who liked.        class="sqdOP yWX7d     _8A5w5    "
+        liked_by_button = lambda: self.driver.find_element_by_xpath('//button[@class="sqdOP yWX7d     _8A5w5    "]')
+        liked_by_button().click()
+        time.sleep(3)
+
+        # get users' profile links .     class="_2dbep qNELH kIKUG" for user tag
+        hrefs_in_view = self.driver.find_elements_by_xpath('//a[@class="_2dbep qNELH kIKUG"]')
+        # getting the hrefs
+        links = [elem.get_attribute('href') for elem in hrefs_in_view]
+        # building list of unique photos
+        [users_link.append(href) for href in links if href not in users_link]
+
+        for link in users_link:
+            self.driver.get(link)
+            time.sleep(2)
+
+            # get all the tags
+            hrefs_in_view = self.driver.find_elements_by_tag_name('a')
+            # finding relevant hrefs
+            posts_in_view = [elem.get_attribute('href') for elem in hrefs_in_view if '.com/p/' in elem.get_attribute('href')]
+
+            if len(posts_in_view) > 0:
+                first_post = posts_in_view[0]
+                self.driver.get(first_post)
+                time.sleep(2)
+                self.like_photo()
+                time.sleep(2)
+
 
 if __name__ == "__main__":
 
@@ -124,8 +157,10 @@ if __name__ == "__main__":
     ig = InstagramBot(username, pw)
     ig.login()
 
-    hashtags_in_niche = [
-        'iosdeveloper'
-    ]
+    # hashtags_in_niche = [
+    #     'iosdeveloper'
+    # ]
 
-    ig.execute(hashtags_in_niche)
+    # ig.execute(hashtags_in_niche)
+
+    ig.see_who_liked('https://www.instagram.com/p/B3vVZxfJMyv/')
