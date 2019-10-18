@@ -51,7 +51,7 @@ class InstagramBot:
             time.sleep(2)
             
             # bot scrolls down to web page to get new pictures
-            for i in range(1, 2):
+            for i in range(1, 3):
                 try: 
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                     time.sleep(2)
@@ -68,46 +68,50 @@ class InstagramBot:
 
         return pic_hrefs
 
-    def like_photo(self, hashtags):
-        driver = self.driver
-        pic_hrefs = self.get_valid_photo_links(hashtags)
-
-        # like pics
-        unique_photos = len(pic_hrefs)
-        for pic_href in pic_hrefs:
-            driver.get(pic_href)
+    def like_photo(self):
+        try:
+            like_button = lambda: self.driver.find_element_by_xpath('//span[@aria-label="Like"]').click()
+            like_button().click()
+            print('Liked!')
+        except Exception as e:
             time.sleep(2)
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            try:
-                time.sleep(random.randint(2, 4))
-                like_button = lambda: driver.find_element_by_xpath('//span[@aria-label="Like"]').click()
-                like_button().click()
-                print('Liked!')
-                for second in range(0, random.randint(2, 3)):
-                    print('# unique photos left: ' + str(unique_photos) + " | Sleeping " + str(second))
-                    time.sleep(1)
-            except Exception as e:
-                time.sleep(2)
-            unique_photos -= 1
 
-    def comment(self, hashtags):
-        pic_hrefs = self.get_valid_photo_links(hashtags)
+    def comment(self):
         comments = ['Keep up the good work! 👏💪', 'I love this']
-        for pic in pic_hrefs:
-            self.driver.get(pic)
+        
+        comment_field = lambda: self.driver.find_element_by_tag_name('textarea')
+        comment_field().click()
+        comment_field().clear()
+
+        comment = random.choice(comments)
+        for letter in comment:
+            comment_field().send_keys(letter)
+            time.sleep(0.2)
+
+        comment_field().send_keys(Keys.RETURN)
+
+    def execute(self, hashtags):
+        pic_hrefs = self.get_valid_photo_links(hashtags)
+        unique_photos = len(pic_hrefs)
+
+        for link in pic_hrefs:
+            self.driver.get(link)
             time.sleep(2)
+
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(random.randint(2, 4))
+
+            self.comment()
+            time.sleep(2)
+
+            self.like_photo()
             
-            comment_field = lambda: self.driver.find_element_by_tag_name('textarea')
-            comment_field().click()
-            comment_field().clear()
+            unique_photos -= 1
+            sleep_time = random.randint(18, 28)
+            print('# unique photos left: ' + str(unique_photos) + "sleeping for " + str(sleep_time))
+            time.sleep(sleep_time)
 
-            comment = random.choice(comments)
-            for letter in comment:
-                comment_field().send_keys(letter)
-                time.sleep(0.2)
-
-            comment_field().send_keys(Keys.RETURN)
+        self.closeBrowser()
 
 
 if __name__ == "__main__":
@@ -121,8 +125,7 @@ if __name__ == "__main__":
     ig.login()
 
     hashtags_in_niche = [
-        'coding','programming','computerscience'
+        'iosdeveloper'
     ]
 
-    # ig.like_photo(hashtags_in_niche)
-    ig.comment(hashtags_in_niche)
+    ig.execute(hashtags_in_niche)
